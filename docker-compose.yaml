@@ -1,0 +1,161 @@
+version: '3.4'
+
+services:
+  mysql:
+    container_name: mysql
+    hostname: mysql
+    command: --innodb-use-native-aio=0
+    image: mysql:8.0
+    ports:
+      - '0.0.0.0:3336:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-admin}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-kafka_database}
+      MYSQL_ROOT_HOST: "%"
+    networks:
+      - subnet_0
+    restart: on-failure
+    volumes:
+      - ./mysql/data.sql:/docker-entrypoint-initdb.d/data.sql
+      - mysql-data:/var/lib/mysql
+
+  zookeeper:
+    container_name: zookeeper
+    hostname: zookeeper
+    image: confluentinc/cp-zookeeper:6.0.0
+    restart: on-failure
+    networks:
+      - subnet_0
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+
+  kafka:
+    container_name: kafka
+    hostname: kafka
+    image: confluentinc/cp-kafka:6.0.0
+    restart: on-failure
+    networks:
+      - subnet_0
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    # volumes:
+    #   - kafka-data:/var/lib/kafka/data
+
+  kafka-boot:
+    container_name: kafka-boot
+    hostname: kafka-boot
+    image: confluentinc/cp-kafka:6.0.0
+    restart: "no"
+    networks:
+      - subnet_0
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      TOPIC: ${TOPIC:-topic_0}
+    command: >
+      sh -c "env && sleep 10 &&
+      kafka-topics
+      --zookeeper $$KAFKA_ZOOKEEPER_CONNECT
+      --create --topic $$TOPIC --partitions 3
+      --replication-factor 1 --if-not-exists &&
+      kafka-topics --zookeeper $$KAFKA_ZOOKEEPER_CONNECT --list | egrep -v '^_'"
+
+  kafka-connect:
+    container_name: kafka-connect
+    hostname: kafka-connect
+    image: juliocesarmidia/kafka-connect:0.0.1
+    build:
+      context: .
+      dockerfile: connect.Dockerfile
+    restart: on-failure
+    networks:
+      - subnet_0
+    ports:
+      - 8083:8083
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: kafka-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-config
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-offset
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-status
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_PLUGIN_PATH: "/usr/share/java,/data/connectors,/usr/share/confluent-hub-components"
+    volumes:
+      - connector-data:/data/
+
+  control-center:
+    container_name: control-center
+    hostname: control-center
+    image: confluentinc/cp-enterprise-control-center:6.0.0
+    restart: on-failure
+    networks:
+      - subnet_0
+    ports:
+      - 9021:9021
+    environment:
+      PORT: 9021
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka:9092
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_CONNECT_CONNECT_CLUSTER: http://kafka-connect:8083
+      CONTROL_CENTER_REST_LISTENERS: http://0.0.0.0:9021
+
+  # schema-registry:
+  #   container_name: schema-registry
+  #   hostname: schema-registry
+  #   image: confluentinc/cp-schema-registry:6.0.0
+  #   restart: on-failure
+  #   networks:
+  #     - subnet_0
+  #   ports:
+  #     - 8081:8081
+  #   environment:
+  #     SCHEMA_REGISTRY_HOST_NAME: schema-registry
+  #     SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+  #     SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
+  # kafka-rest:
+  #   container_name: kafka-rest
+  #   hostname: kafka-rest
+  #   image: confluentinc/cp-kafka-rest:6.0.0
+  #   restart: on-failure
+  #   networks:
+  #     - subnet_0
+  #   ports:
+  #     - 8082:8082
+  #   environment:
+  #     KAFKA_REST_HOST_NAME: rest-proxy
+  #     KAFKA_REST_BOOTSTRAP_SERVERS: kafka:9092
+  #     KAFKA_REST_LISTENERS: http://0.0.0.0:8082
+  #     KAFKA_REST_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+
+networks:
+  subnet_0:
+    driver: bridge
+
+volumes:
+  mysql-data: {}
+  zookeeper-data: {}
+  # kafka-data: {}
+  connector-data: {}
