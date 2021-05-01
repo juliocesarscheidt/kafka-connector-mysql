@@ -34,13 +34,16 @@ mysql -u root -padmin -h 127.0.0.1 -P 3336
 
 INSERT INTO kafka_database.users (name, email, password) VALUES ('teste_1000', 'teste_1000@mail.com', 'password-1000');
 
-SELECT * FROM kafka_database.users;
-
-
 docker exec -it mysql mysql -u root -padmin -h 127.0.0.1 -P 3306
+
+SHOW SCHEMAS;
+SELECT * FROM kafka_database.users;
 
 docker exec -it mysql sh -c \
   'mysql -u root -padmin -h 127.0.0.1 -P 3306 -e "SHOW SCHEMAS"'
+
+docker exec -it mysql sh -c \
+  'mysql -u root -padmin -h 127.0.0.1 -P 3306 -e "TRUNCATE TABLE kafka_database.users"'
 
 (
 cat <<EOF

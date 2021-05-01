@@ -4,19 +4,21 @@ services:
   mysql:
     container_name: mysql
     hostname: mysql
-    command: --innodb-use-native-aio=0
-    image: mysql:8.0
+    image: juliocesarmidia/mysql:8.0
+    build:
+      context: ./mysql
     ports:
-      - '0.0.0.0:3336:3306'
+      - '3336:3306'
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-admin}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-kafka_database}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASS}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_ROOT_HOST: "%"
+      DEBEZIUM_USER: ${DEBEZIUM_USER}
+      DEBEZIUM_PASS: ${DEBEZIUM_PASS}
     networks:
       - subnet_0
     restart: on-failure
     volumes:
-      - ./mysql/data.sql:/docker-entrypoint-initdb.d/data.sql
       - mysql-data:/var/lib/mysql
 
   zookeeper:
@@ -52,34 +54,26 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    # volumes:
-    #   - kafka-data:/var/lib/kafka/data
 
-  kafka-boot:
-    container_name: kafka-boot
-    hostname: kafka-boot
-    image: confluentinc/cp-kafka:6.0.0
+  kafka-setup:
+    container_name: kafka-setup
+    hostname: kafka-setup
+    image: juliocesarmidia/kafka-setup:6.0.0
+    build:
+      context: ./kafka-setup
     restart: "no"
     networks:
       - subnet_0
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      TOPIC: ${TOPIC:-topic_0}
-    command: >
-      sh -c "env && sleep 10 &&
-      kafka-topics
-      --zookeeper $$KAFKA_ZOOKEEPER_CONNECT
-      --create --topic $$TOPIC --partitions 3
-      --replication-factor 1 --if-not-exists &&
-      kafka-topics --zookeeper $$KAFKA_ZOOKEEPER_CONNECT --list | egrep -v '^_'"
+      TOPICS: ${TOPICS:-topic_0,topic_1,topic_2}
 
   kafka-connect:
     container_name: kafka-connect
     hostname: kafka-connect
-    image: juliocesarmidia/kafka-connect:0.0.1
+    image: juliocesarmidia/kafka-connect:6.0.0
     build:
-      context: .
-      dockerfile: connect.Dockerfile
+      context: ./kafka-connect
     restart: on-failure
     networks:
       - subnet_0
@@ -103,6 +97,21 @@ services:
       CONNECT_PLUGIN_PATH: "/usr/share/java,/data/connectors,/usr/share/confluent-hub-components"
     volumes:
       - connector-data:/data/
+
+  kafka-connect-setup:
+    container_name: kafka-connect-setup
+    hostname: kafka-connect-setup
+    image: juliocesarmidia/kafka-connect-setup:6.0.0
+    build:
+      context: ./kafka-connect-setup
+    restart: "no"
+    networks:
+      - subnet_0
+    environment:
+      KAFKA_CONNECT_URI: http://kafka-connect:8083
+      DEBEZIUM_USER: ${DEBEZIUM_USER}
+      DEBEZIUM_PASS: ${DEBEZIUM_PASS}
+      FORCE_RECREATE: 0
 
   control-center:
     container_name: control-center
@@ -150,6 +159,22 @@ services:
   #     KAFKA_REST_LISTENERS: http://0.0.0.0:8082
   #     KAFKA_REST_SCHEMA_REGISTRY_URL: http://schema-registry:8081
 
+  # elasticsearch:
+  #   container_name: elasticsearch
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+  #   environment:
+  #     ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+  #     bootstrap.memory_lock: "true"
+  #     discovery.type: "single-node"
+  #     node.name: elasticsearch
+  #   volumes:
+  #     - elasticsearch-data:/usr/share/elasticsearch/data
+  #   ports:
+  #     - 9200:9200
+  #     - 9300:9300
+  #   networks:
+  #     - subnet_0
+
 networks:
   subnet_0:
     driver: bridge
@@ -157,5 +182,5 @@ networks:
 volumes:
   mysql-data: {}
   zookeeper-data: {}
-  # kafka-data: {}
   connector-data: {}
+  elasticsearch-data: {}
