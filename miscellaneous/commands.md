@@ -1,28 +1,48 @@
-# Useful Commands
-
-<https://www.confluent.io/blog/kafka-connect-deep-dive-jdbc-source-connector/>
-
-<https://docs.confluent.io/kafka-connect-jdbc/current/source-connector/index.html>
-
-<https://www.confluent.io/blog/kafka-connect-deep-dive-converters-serialization-explained/>
-
-<https://docs.confluent.io/platform/current/installation/docker/config-reference.html>
-
-<https://debezium.io/documentation/reference/1.5/connectors/mysql.html#mysql-example-configuration>
-
-<https://github.com/confluentinc/cp-all-in-one/blob/6.1.1-post/cp-all-in-one/docker-compose.yml>
-
-<https://github.com/confluentinc/cp-demo/blob/6.1.1-post/docker-compose.yml>
-
-<https://kafka.apache.org/documentation/#connect_rest>
-
-<https://docs.confluent.io/home/connect/extending.html>
-
-<https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/index.html>
-
-<https://github.com/confluentinc/examples>
+# Some Commands
 
 ```bash
+docker-compose up -d --build mysql
+# docker-compose logs -f mysql
+sleep 10
+
+# docker-compose up -d elasticsearch
+# sleep 10
+
+docker-compose up -d zookeeper kafka
+# docker-compose logs -f zookeeper kafka
+sleep 10
+
+
+# API for sink
+docker-compose up -d --build api
+# docker-compose logs -f api
+sleep 10
+
+
+docker-compose up -d --build kafka-connect
+# docker-compose logs -f kafka-connect
+sleep 10
+
+docker-compose up -d --build kafka-connect-setup
+# docker-compose logs -f kafka-connect-setup
+sleep 10
+
+docker-compose up -d control-center
+# docker-compose logs -f control-center
+sleep 10
+
+
+# clients
+docker-compose up -d --build producer
+# docker-compose logs -f producer
+sleep 10
+
+docker-compose up -d --build consumer
+# docker-compose logs -f consumer
+sleep 10
+
+
+
 # kafka docker
 docker-compose exec kafka sh -c \
   'kafka-topics --zookeeper $KAFKA_ZOOKEEPER_CONNECT --create --topic topic_0 --partitions 1 --replication-factor 1 --if-not-exists'
