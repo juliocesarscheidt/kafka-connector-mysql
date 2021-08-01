@@ -1,5 +1,9 @@
 # Useful Commands
 
+<https://www.confluent.io/blog/kafka-connect-deep-dive-jdbc-source-connector/>
+
+<https://docs.confluent.io/kafka-connect-jdbc/current/source-connector/index.html>
+
 <https://docs.confluent.io/platform/current/installation/docker/config-reference.html>
 
 <https://debezium.io/documentation/reference/1.5/connectors/mysql.html#mysql-example-configuration>
@@ -27,6 +31,12 @@ docker exec -it kafka sh -c \
 # produce some message
 docker exec -it kafka sh -c \
   'kafka-console-producer --broker-list 127.0.0.1:9092 --topic topic_0'
+
+
+
+mysql -u root -padmin -h 127.0.0.1 -P 3336 -e "INSERT INTO kafka_database.users (name, email, password) VALUES ('teste_$RANDOM', 'teste_$RANDOM@mail.com', 'password-$RANDOM');"
+
+mysql -u root -padmin -h 127.0.0.1 -P 3336 -e "SELECT CAST(id AS UNSIGNED) AS id, name, email, password, created_at, updated_at, deleted_at FROM kafka_database.users"
 
 
 

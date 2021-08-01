@@ -1,6 +1,8 @@
-#!/bin/bash
+# Kafka Connector
 
-# environment
+## Commands
+
+```bash
 docker-compose up -d --build mysql
 # docker-compose logs -f mysql
 sleep 10
@@ -8,15 +10,10 @@ sleep 10
 # docker-compose up -d elasticsearch
 # sleep 10
 
-docker-compose up -d zookeeper
+docker-compose up -d zookeeper kafka
+# docker-compose logs -f zookeeper kafka
 sleep 10
 
-docker-compose up -d kafka
-sleep 10
-
-docker-compose up -d --build kafka-setup
-# docker-compose logs -f kafka-setup
-sleep 10
 
 docker-compose up -d --build kafka-connect
 # docker-compose logs -f kafka-connect
@@ -27,6 +24,7 @@ docker-compose up -d --build kafka-connect-setup
 sleep 10
 
 docker-compose up -d control-center
+# docker-compose logs -f control-center
 sleep 10
 
 
@@ -38,3 +36,13 @@ sleep 10
 docker-compose up -d --build consumer
 # docker-compose logs -f consumer
 sleep 10
+
+```
+
+## Access
+
+> Connector
+<http://localhost:8083/connectors>
+
+> Kafka Connect
+<http://localhost:9021/>

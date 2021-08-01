@@ -54,19 +54,8 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-  kafka-setup:
-    container_name: kafka-setup
-    hostname: kafka-setup
-    image: juliocesarmidia/kafka-setup:6.0.0
-    build:
-      context: ./kafka-setup
-    restart: "no"
-    networks:
-      - subnet_0
-    environment:
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      TOPICS: ${TOPICS:-topic_0,topic_1,topic_2}
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_MIN_INSYNC_REPLICAS: 1
 
   kafka-connect:
     container_name: kafka-connect
@@ -88,8 +77,12 @@ services:
       CONNECT_STATUS_STORAGE_TOPIC: _connect-status
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
       CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_INTERNAL_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
       CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
@@ -102,6 +95,8 @@ services:
     container_name: kafka-connect-setup
     hostname: kafka-connect-setup
     image: juliocesarmidia/kafka-connect-setup:6.0.0
+    # stdin_open: yes
+    # tty: yes
     build:
       context: ./kafka-connect-setup
     restart: "no"
@@ -130,6 +125,19 @@ services:
       CONTROL_CENTER_CONNECT_CONNECT_CLUSTER: http://kafka-connect:8083
       CONTROL_CENTER_REST_LISTENERS: http://0.0.0.0:9021
 
+  # kafka-setup:
+  #   container_name: kafka-setup
+  #   hostname: kafka-setup
+  #   image: juliocesarmidia/kafka-setup:6.0.0
+  #   build:
+  #     context: ./kafka-setup
+  #   restart: "no"
+  #   networks:
+  #     - subnet_0
+  #   environment:
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     TOPICS: ${TOPICS:-topic_0,topic_1,topic_2}
+
   producer:
     container_name: producer
     hostname: producer
@@ -154,7 +162,7 @@ services:
       - subnet_0
     environment:
       CONSUMER_BOOTSTRAP_SERVERS: kafka:9092
-      TOPICS: ${TOPICS:-mysql_namespace.kafka_database.users}
+      TOPICS: ${TOPICS:-jdbc-connector-users}
 
   # schema-registry:
   #   container_name: schema-registry

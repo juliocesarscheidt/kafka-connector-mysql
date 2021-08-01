@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
   UNIQUE KEY `email` (`email`)
 );
 
+-- SELECT CAST(id AS UNSIGNED) AS id, name, email, password, created_at, updated_at, deleted_at FROM kafka_database.users;
+
 CREATE USER '${DEBEZIUM_USER}'@'%' IDENTIFIED BY '${DEBEZIUM_PASS}';
 GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO '${DEBEZIUM_USER}'@'%';
 

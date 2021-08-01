@@ -7,3 +7,4 @@ RUN apk update && \
 COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
 
 ENTRYPOINT ["/opt/docker-entrypoint.sh"]
+# ENTRYPOINT ["tail", "-f", "/dev/null"]
