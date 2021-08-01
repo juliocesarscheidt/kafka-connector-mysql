@@ -1,5 +1,7 @@
 # Some docs
 
+<https://docs.confluent.io/kafka-connect-http/current/overview.html>
+
 <https://www.confluent.io/blog/kafka-connect-deep-dive-jdbc-source-connector/>
 
 <https://docs.confluent.io/kafka-connect-jdbc/current/source-connector/index.html>
