@@ -4,6 +4,8 @@
 
 <https://docs.confluent.io/kafka-connect-jdbc/current/source-connector/index.html>
 
+<https://www.confluent.io/blog/kafka-connect-deep-dive-converters-serialization-explained/>
+
 <https://docs.confluent.io/platform/current/installation/docker/config-reference.html>
 
 <https://debezium.io/documentation/reference/1.5/connectors/mysql.html#mysql-example-configuration>

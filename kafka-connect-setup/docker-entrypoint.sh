@@ -83,31 +83,60 @@ create_connector "${CONNECTOR_NAME}" "${DATA}"
 
 
 
-CONNECTOR_NAME="mysql-connector"
-# mysql_namespace.kafka_database.*
+CONNECTOR_NAME="http-connector-api"
 
 DATA=$(cat << EOF
 {
   "name": "$CONNECTOR_NAME",
   "config": {
-    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
-    "database.hostname": "mysql",
-    "database.port": "3306",
-    "database.user": "$DEBEZIUM_USER",
-    "database.password": "$DEBEZIUM_PASS",
+    "topics": "jdbc-connector-users",
     "tasks.max": "1",
-    "database.server.name": "mysql_namespace",
-    "database.include.list": "kafka_database",
-    "database.history.kafka.bootstrap.servers": "kafka:9092",
-    "database.history.kafka.topic": "history.kafka_database",
-    "database.ssl.mode": "disabled",
-    "database.allowPublicKeyRetrieval": "true",
-    "include.schema.changes": "true"
+    "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+    "http.api.url": "http://api:5000/v1/users",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "confluent.topic.bootstrap.servers": "kafka:9092",
+    "confluent.topic.replication.factor": "1",
+    "reporter.bootstrap.servers": "kafka:9092",
+    "reporter.result.topic.name": "success-responses",
+    "reporter.result.topic.replication.factor": "1",
+    "reporter.error.topic.name":"error-responses",
+    "reporter.error.topic.replication.factor":"1"
   }
 }
 EOF
 )
 
 create_connector "${CONNECTOR_NAME}" "${DATA}"
+
+
+
+# CONNECTOR_NAME="mysql-connector"
+# # mysql_namespace.kafka_database.*
+
+# DATA=$(cat << EOF
+# {
+#   "name": "$CONNECTOR_NAME",
+#   "config": {
+#     "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+#     "database.hostname": "mysql",
+#     "database.port": "3306",
+#     "database.user": "$DEBEZIUM_USER",
+#     "database.password": "$DEBEZIUM_PASS",
+#     "tasks.max": "1",
+#     "database.server.name": "mysql_namespace",
+#     "database.include.list": "kafka_database",
+#     "database.history.kafka.bootstrap.servers": "kafka:9092",
+#     "database.history.kafka.topic": "history.kafka_database",
+#     "database.ssl.mode": "disabled",
+#     "database.allowPublicKeyRetrieval": "true",
+#     "include.schema.changes": "true"
+#   }
+# }
+# EOF
+# )
+
+# create_connector "${CONNECTOR_NAME}" "${DATA}"
+
+
 
 exit 0

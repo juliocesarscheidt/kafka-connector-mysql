@@ -106,7 +106,7 @@ services:
       KAFKA_CONNECT_URI: http://kafka-connect:8083
       DEBEZIUM_USER: ${DEBEZIUM_USER}
       DEBEZIUM_PASS: ${DEBEZIUM_PASS}
-      FORCE_RECREATE: 0
+      FORCE_RECREATE: 1
 
   control-center:
     container_name: control-center
@@ -163,6 +163,18 @@ services:
     environment:
       CONSUMER_BOOTSTRAP_SERVERS: kafka:9092
       TOPICS: ${TOPICS:-jdbc-connector-users}
+
+  api:
+    container_name: api
+    hostname: api
+    image: juliocesarmidia/api:1.0.0
+    build:
+      context: ./api
+    ports:
+      - 5000:5000
+    restart: on-failure
+    networks:
+      - subnet_0
 
   # schema-registry:
   #   container_name: schema-registry
