@@ -1,18 +1,18 @@
 {
-  "name": "connector",
+  "name": "${CONNECTOR_NAME}",
   "config": {
     "connector.class": "io.debezium.connector.mysql.MySqlConnector",
-    "tasks.max": "1",
     "database.hostname": "mysql",
     "database.port": "3306",
-    "database.user": "",
-    "database.password": "",
+    "database.user": "${DEBEZIUM_USER}",
+    "database.password": "${DEBEZIUM_PASS}",
+    "tasks.max": "1",
     "database.server.name": "mysql_namespace",
     "database.include.list": "kafka_database",
     "database.history.kafka.bootstrap.servers": "kafka:9092",
+    "database.history.kafka.topic": "history.kafka_database",
     "database.ssl.mode": "disabled",
     "database.allowPublicKeyRetrieval": "true",
-    "include.schema.changes": "true",
-    "database.history.kafka.topic": "history.kafka_database"
+    "include.schema.changes": "true"
   }
 }

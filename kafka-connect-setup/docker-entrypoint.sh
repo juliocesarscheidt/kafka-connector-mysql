@@ -1,5 +1,12 @@
 #!/bin/sh
 
+echo "${KAFKA_CONNECT_URI}"
+
+while [ "$(curl --silent -o /dev/null -L -w "%{http_code}" --url "${KAFKA_CONNECT_URI}/connectors")" != "200" ] ; do
+  echo "[INFO] Sleeping..."
+  sleep 5
+done
+
 function create_connector() {
   local CONNECTOR_NAME="${1}"
   local DATA="${2}"
@@ -42,25 +49,24 @@ function create_connector() {
   fi
 }
 
-
-
+# jdbc source connector
 CONNECTOR_NAME="jdbc-connector-users"
 
 DATA=$(cat << EOF
 {
-  "name": "$CONNECTOR_NAME",
+  "name": "${CONNECTOR_NAME}",
   "config": {
     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-    "connection.url": "jdbc:mysql://mysql:3306/kafka_database?useSSL=false",
-    "connection.user": "$DEBEZIUM_USER",
-    "connection.password": "$DEBEZIUM_PASS",
+    "connection.url": "jdbc:mysql://mysql:3306/kafka_database?allowPublicKeyRetrieval=true&useSSL=false",
+    "connection.user": "${DEBEZIUM_USER}",
+    "connection.password": "${DEBEZIUM_PASS}",
     "tasks.max": "1",
-    "topic.prefix": "$CONNECTOR_NAME",
+    "topic.prefix": "${CONNECTOR_NAME}",
     "db.timezone": "America/Sao_Paulo",
     "errors.tolerance": "all",
     "errors.log.enable": "true",
     "errors.log.include.messages": "true",
-    "poll.interval.ms": "30000",
+    "poll.interval.ms": "5000",
     "reconnect.backoff.max.ms": "10000",
     "reconnect.backoff.ms": "5000",
     "retry.backoff.ms": "10000",
@@ -81,13 +87,12 @@ EOF
 
 create_connector "${CONNECTOR_NAME}" "${DATA}"
 
-
-
+# http sink connector
 CONNECTOR_NAME="http-connector-api"
 
 DATA=$(cat << EOF
 {
-  "name": "$CONNECTOR_NAME",
+  "name": "${CONNECTOR_NAME}",
   "config": {
     "topics": "jdbc-connector-users",
     "tasks.max": "1",
@@ -107,36 +112,5 @@ EOF
 )
 
 create_connector "${CONNECTOR_NAME}" "${DATA}"
-
-
-
-# CONNECTOR_NAME="mysql-connector"
-# # mysql_namespace.kafka_database.*
-
-# DATA=$(cat << EOF
-# {
-#   "name": "$CONNECTOR_NAME",
-#   "config": {
-#     "connector.class": "io.debezium.connector.mysql.MySqlConnector",
-#     "database.hostname": "mysql",
-#     "database.port": "3306",
-#     "database.user": "$DEBEZIUM_USER",
-#     "database.password": "$DEBEZIUM_PASS",
-#     "tasks.max": "1",
-#     "database.server.name": "mysql_namespace",
-#     "database.include.list": "kafka_database",
-#     "database.history.kafka.bootstrap.servers": "kafka:9092",
-#     "database.history.kafka.topic": "history.kafka_database",
-#     "database.ssl.mode": "disabled",
-#     "database.allowPublicKeyRetrieval": "true",
-#     "include.schema.changes": "true"
-#   }
-# }
-# EOF
-# )
-
-# create_connector "${CONNECTOR_NAME}" "${DATA}"
-
-
 
 exit 0

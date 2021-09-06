@@ -1,7 +1,4 @@
 FROM confluentinc/cp-kafka-connect-base:6.0.0
-LABEL maintainer="Julio Cesar <julio@blackdevs.com.br>"
-
-ENV CONNECT_PLUGIN_PATH: "/usr/share/java,/data/connectors,/usr/share/confluent-hub-components"
 
 RUN confluent-hub install --no-prompt hpgrahsl/kafka-connect-mongodb:1.1.0 \
   && confluent-hub install --no-prompt debezium/debezium-connector-mysql:1.5.0 \
@@ -10,21 +7,24 @@ RUN confluent-hub install --no-prompt hpgrahsl/kafka-connect-mongodb:1.1.0 \
   && confluent-hub install --no-prompt confluentinc/kafka-connect-http:1.0.3 \
   && confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.0.0
 
-# user root
+USER root
+RUN yum install -y gettext curl
 
-# RUN curl --silent -L --output mysql-connector-java-8.0.26-1.el8.noarch.rpm https://cdn.mysql.com//Downloads/Connector-J/mysql-connector-java-8.0.26-1.el8.noarch.rpm
-# RUN rpm --checksig mysql-connector-java-8.0.26-1.el8.noarch.rpm
-# RUN rpm -i -f mysql-connector-java-8.0.26-1.el8.noarch.rpm
+# copy mysql jar file
+COPY --chown=1000:1000 ./mysql-connector-java-8.0.13.jar /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/
 
-COPY --chown=1000:1000 kafka-connect.properties /etc/kafka/connect-standalone.properties
-RUN chmod 444 /etc/kafka/connect-standalone.properties
-RUN ls -lth /etc/kafka/
-# COPY kafka-connect.properties /etc/kafka/connect-distributed.properties
+# copy properties file
+COPY --chown=1000:1000 kafka-connect.properties /tmp/connect-distributed.properties
 
-# copy mysql driver in order for plugin to work
-COPY ./mysql-connector-java-8.0.13.jar /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/
+ARG BOOTSTRAP_SERVERS
+ENV BOOTSTRAP_SERVERS=$BOOTSTRAP_SERVERS
 
-# RUN ls -lth /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/
+RUN cat /tmp/connect-distributed.properties | envsubst \${BOOTSTRAP_SERVERS} | tee /etc/kafka/connect-distributed.properties
 
-CMD ["/etc/confluent/docker/run"]
-# connect-distributed /etc/kafka/connect-distributed.properties
+RUN rm -f /tmp/connect-distributed.properties
+RUN chmod 444 /etc/kafka/connect-distributed.properties
+
+USER appuser
+EXPOSE 8083
+
+ENTRYPOINT ["/usr/bin/connect-distributed", "/etc/kafka/connect-distributed.properties"]

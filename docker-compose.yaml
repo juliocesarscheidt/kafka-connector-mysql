@@ -63,33 +63,17 @@ services:
     container_name: kafka-connect
     hostname: kafka-connect
     image: juliocesarmidia/kafka-connect:6.0.0
+    stdin_open: yes
+    tty: yes
     build:
       context: ./kafka-connect
+      args:
+        BOOTSTRAP_SERVERS: ${BOOTSTRAP_SERVERS:-kafka:9092}
     restart: on-failure
     networks:
       - subnet_0
     ports:
       - 8083:8083
-    environment:
-      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
-      CONNECT_REST_PORT: 8083
-      CONNECT_GROUP_ID: kafka-connect-group
-      CONNECT_CONFIG_STORAGE_TOPIC: _connect-config
-      CONNECT_OFFSET_STORAGE_TOPIC: _connect-offset
-      CONNECT_STATUS_STORAGE_TOPIC: _connect-status
-      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_INTERNAL_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_INTERNAL_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
-      CONNECT_PLUGIN_PATH: "/usr/share/java,/data/connectors,/usr/share/confluent-hub-components"
     volumes:
       - connector-data:/data/
 
@@ -97,8 +81,8 @@ services:
     container_name: kafka-connect-setup
     hostname: kafka-connect-setup
     image: juliocesarmidia/kafka-connect-setup:6.0.0
-    # stdin_open: yes
-    # tty: yes
+    stdin_open: yes
+    tty: yes
     build:
       context: ./kafka-connect-setup
     restart: "no"
@@ -126,19 +110,6 @@ services:
       CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
       CONTROL_CENTER_CONNECT_KAFKA-CONNECT_CLUSTER: http://kafka-connect:8083
       CONTROL_CENTER_REST_LISTENERS: http://0.0.0.0:9021
-
-  # kafka-setup:
-  #   container_name: kafka-setup
-  #   hostname: kafka-setup
-  #   image: juliocesarmidia/kafka-setup:6.0.0
-  #   build:
-  #     context: ./kafka-setup
-  #   restart: "no"
-  #   networks:
-  #     - subnet_0
-  #   environment:
-  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #     TOPICS: ${TOPICS:-topic_0,topic_1,topic_2}
 
   producer:
     container_name: producer
