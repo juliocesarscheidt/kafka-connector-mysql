@@ -1,4 +1,5 @@
 FROM confluentinc/cp-kafka-connect-base:6.0.0
+LABEL maintainer="Julio Cesar <julio@blackdevs.com.br>"
 
 RUN confluent-hub install --no-prompt hpgrahsl/kafka-connect-mongodb:1.1.0 \
   && confluent-hub install --no-prompt debezium/debezium-connector-mysql:1.5.0 \

@@ -203,4 +203,4 @@ volumes:
   mysql-data: {}
   zookeeper-data: {}
   connector-data: {}
-  elasticsearch-data: {}
+  # elasticsearch-data: {}
