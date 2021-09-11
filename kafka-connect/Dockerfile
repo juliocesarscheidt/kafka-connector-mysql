@@ -11,8 +11,9 @@ RUN confluent-hub install --no-prompt hpgrahsl/kafka-connect-mongodb:1.1.0 \
 USER root
 RUN yum install -y gettext curl
 
-# copy mysql jar file
+# copy mysql and postgres jar files
 COPY --chown=1000:1000 ./mysql-connector-java-8.0.13.jar /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/
+COPY --chown=1000:1000 ./postgresql-42.2.23.jar /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/
 
 # copy properties file
 COPY --chown=1000:1000 kafka-connect.properties /tmp/connect-distributed.properties
