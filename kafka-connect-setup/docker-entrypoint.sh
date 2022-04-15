@@ -58,8 +58,8 @@ DATA=$(cat << EOF
   "config": {
     "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
     "connection.url": "jdbc:mysql://mysql:3306/kafka_database?allowPublicKeyRetrieval=true&useSSL=false",
-    "connection.user": "${DEBEZIUM_USER}",
-    "connection.password": "${DEBEZIUM_PASS}",
+    "connection.user": "debezium",
+    "connection.password": "password",
     "tasks.max": "1",
     "topic.prefix": "${CONNECTOR_NAME}",
     "db.timezone": "America/Sao_Paulo",
@@ -106,6 +106,35 @@ DATA=$(cat << EOF
     "reporter.result.topic.replication.factor": "1",
     "reporter.error.topic.name":"error-responses",
     "reporter.error.topic.replication.factor":"1"
+  }
+}
+EOF
+)
+
+create_connector "${CONNECTOR_NAME}" "${DATA}"
+
+# The Kafka topics that this connector will be reading from must exist prior to starting the connector.
+# rabbitmq sink connector
+CONNECTOR_NAME="rabbitmq-connector-amqp"
+
+DATA=$(cat << EOF
+{
+  "name": "${CONNECTOR_NAME}",
+  "config": {
+    "connector.class": "io.confluent.connect.rabbitmq.sink.RabbitMQSinkConnector",
+    "tasks.max": "1",
+    "topics": "jdbc-connector-users",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+    "confluent.topic.bootstrap.servers": "kafka:9092",
+    "confluent.topic.replication.factor": "1",
+    "rabbitmq.host": "rabbitmq",
+    "rabbitmq.port": "5672",
+    "rabbitmq.username": "rabbitmq",
+    "rabbitmq.password": "admin",
+    "rabbitmq.exchange": "rabbitmq_connector_exchange",
+    "rabbitmq.routing.key": "rabbitmq_connector",
+    "rabbitmq.delivery.mode": "PERSISTENT"
   }
 }
 EOF

@@ -6,7 +6,8 @@ RUN confluent-hub install --no-prompt hpgrahsl/kafka-connect-mongodb:1.1.0 \
   && confluent-hub install --no-prompt confluentinc/kafka-connect-elasticsearch:11.0.0 \
   && confluent-hub install --no-prompt jcustenborder/kafka-connect-json-schema:0.2.5 \
   && confluent-hub install --no-prompt confluentinc/kafka-connect-http:1.0.3 \
-  && confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.0.0
+  && confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.0.0 \
+  && confluent-hub install --no-prompt confluentinc/kafka-connect-rabbitmq-sink:1.7.2
 
 USER root
 RUN yum install -y gettext curl

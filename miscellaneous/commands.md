@@ -63,7 +63,6 @@ done
 mysql -u root -padmin -h 127.0.0.1 -P 3336 -e "SELECT CAST(id AS UNSIGNED) AS id, name, email, password, created_at, updated_at, deleted_at FROM kafka_database.users"
 
 
-
 mysql -u root -padmin -h 127.0.0.1 -P 3336
 
 INSERT INTO kafka_database.users (name, email, password) VALUES ('teste_1000', 'teste_1000@mail.com', 'password-1000');

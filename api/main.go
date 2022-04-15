@@ -9,16 +9,18 @@ import (
 	"time"
 )
 
-// Data is the content of request
-type Data struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Password string `json:"password"`
-	CreatedAt int `json:"created_at"`
-	UpdatedAt int `json:"updated_at"`
-	DeleteAt int `json:"deleted_at"`
+// UserDTO is the content of request
+type UserDTO struct {
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	CreatedAt int    `json:"created_at"`
+	UpdatedAt int    `json:"updated_at"`
+	DeleteAt  int    `json:"deleted_at"`
 }
+
+var users []UserDTO
 
 func returnHTTPResponse(writter http.ResponseWriter, responseMap map[string]interface{}, status int) {
 	res, err := json.Marshal(responseMap)
@@ -31,7 +33,7 @@ func returnHTTPResponse(writter http.ResponseWriter, responseMap map[string]inte
 	return
 }
 
-func usersCreate() http.HandlerFunc {
+func usersHandle() http.HandlerFunc {
 	return func(writter http.ResponseWriter, req *http.Request) {
 		writter.Header().Set("Content-Type", "application/json")
 
@@ -39,43 +41,62 @@ func usersCreate() http.HandlerFunc {
 		defer cancel()
 
 		defer req.Body.Close()
+
+		fmt.Println("req.Method", req.Method)
+
+		if req.Method == "GET" {
+			usersGet(writter, req)
+			return
+		} else if req.Method == "POST" {
+			usersCreate(writter, req)
+			return
+		}
+
 		var responseHTTP = make(map[string]interface{})
-
-		if req.Method != "POST" {
-			responseHTTP["status"] = "error"
-			responseHTTP["message"] = "invalid method"
-			returnHTTPResponse(writter, responseHTTP, http.StatusBadRequest)
-			return
-		}
-
-		body, _ := ioutil.ReadAll(req.Body)
-		fmt.Println(string(body))
-
-		data := Data{}
-		if err := json.Unmarshal([]byte(string(body)), &data); err != nil {
-			fmt.Println("[ERROR]", err)
-
-			responseHTTP["status"] = "error"
-			responseHTTP["message"] = "invalid data format"
-			returnHTTPResponse(writter, responseHTTP, http.StatusUnprocessableEntity)
-			return
-		}
-
-		jsonData, _ := json.Marshal(data)
-		// fmt.Println(string(jsonData))
-
-		responseHTTP["status"] = "ok"
-		responseHTTP["data"] = string(jsonData)
-		returnHTTPResponse(writter, responseHTTP, http.StatusOK)
+		responseHTTP["status"] = "error"
+		responseHTTP["message"] = "invalid method"
+		returnHTTPResponse(writter, responseHTTP, http.StatusBadRequest)
 	}
+}
+
+func usersGet(writter http.ResponseWriter, req *http.Request) {
+	// fmt.Println(string(jsonData))
+	var responseHTTP = make(map[string]interface{})
+	responseHTTP["status"] = "ok"
+	responseHTTP["data"] = users
+	returnHTTPResponse(writter, responseHTTP, http.StatusOK)
+}
+
+func usersCreate(writter http.ResponseWriter, req *http.Request) {
+	body, _ := ioutil.ReadAll(req.Body)
+	fmt.Println(string(body))
+
+	var responseHTTP = make(map[string]interface{})
+	user := UserDTO{}
+	fmt.Println(user)
+
+	if err := json.Unmarshal([]byte(string(body)), &user); err != nil {
+		fmt.Println("[ERROR]", err)
+
+		responseHTTP["status"] = "error"
+		responseHTTP["message"] = "invalid user format"
+		returnHTTPResponse(writter, responseHTTP, http.StatusUnprocessableEntity)
+		return
+	}
+
+	users = append(users, user)
+	fmt.Println(users)
+
+	responseHTTP["status"] = "ok"
+	responseHTTP["data"] = user
+	returnHTTPResponse(writter, responseHTTP, http.StatusOK)
 }
 
 func main() {
 	port := 5000
 
-	fmt.Printf("Listening at port %d", port)
-	// POST method
-	http.HandleFunc("/v1/users", usersCreate())
+	http.HandleFunc("/v1/users", usersHandle())
 
+	fmt.Printf("Listening at port %d", port)
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }

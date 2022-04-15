@@ -63,8 +63,8 @@ services:
     container_name: kafka-connect
     hostname: kafka-connect
     image: juliocesarmidia/kafka-connect:6.0.0
-    stdin_open: yes
-    tty: yes
+    stdin_open: true
+    tty: true
     build:
       context: ./kafka-connect
       args:
@@ -81,8 +81,8 @@ services:
     container_name: kafka-connect-setup
     hostname: kafka-connect-setup
     image: juliocesarmidia/kafka-connect-setup:6.0.0
-    stdin_open: yes
-    tty: yes
+    stdin_open: true
+    tty: true
     build:
       context: ./kafka-connect-setup
     restart: "no"
@@ -149,6 +149,22 @@ services:
     restart: on-failure
     networks:
       - subnet_0
+
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: rabbitmq
+    image: juliocesarmidia/kafka-rabbitmq:latest
+    build:
+      context: ./rabbitmq
+    ports:
+      - 5872:5672
+      - 15872:15672
+    environment:
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    networks:
+      - subnet_0
+    restart: on-failure
 
   # schema-registry:
   #   container_name: schema-registry
